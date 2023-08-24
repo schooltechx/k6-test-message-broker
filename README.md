@@ -1,35 +1,40 @@
-# Message Broker Test
-ทดสอบประสิทธิ์ภาพ Message Broker ระหว่าง RabbitMQ และ Memphis
+# Load test Database, Memphis and RabbitMQ
 
-# ติดตั้ง
+
+[![Load Test RabbitMQ and Memphis with K6](https://img.youtube.com/vi/7KKoXFLqavE/0.jpg)](https://youtu.be/7KKoXFLqavE "Load Test RabbitMQ และ Memphis ด้วย K6")
+
+
+# Setup
+clone or copy code to correct position. How to setup please see below command
 
 ```
 docker network create mq
 docker compose up -d
 mkdir mq 
 cd mq
-# สร้างโปรเจ็กแล้วใส่โค้ดหรือ clone project 
+# how to init project 
 npm init -y
 npm install amqplib memphis-dev express 
 npm install @types/amqplib @types/express prisma --save-dev
 npx prisma init --datasource-provider postgresql
 code .
-# แก้ compose.yaml 
+# edit compose.yaml 
 docker compose up -d
 # .env, prisma/schema.prisma
 npx prisma migrate dev --name init
 npx prisma studio
 node app.js
 node consumer.js
+
 ```
-## Configuration ต่างๆ
+## Configuration 
 - [compose.yaml](./compose.yaml) postgress, RabbitMQ, Memphis 
-- [.env](./.env) connection string ใช้ postgressql หรือ sqlite (ไม่แนะนำ เพราะช้ามากตอนเขียน)
+- [.env](./.env) connection string for postgressql or sqlite (very slow)
 ```
 # DATABASE_URL="file:./dev.db"
 DATABASE_URL="postgresql://frappet:password@localhost:5432/mq?schema=public"
 ```
-- [prisma/schema.prisma](./prisma/schema.prisma) เพิ่ม m กับ r สำหรับ memphis กับ rabbitmq
+- [prisma/schema.prisma](./prisma/schema.prisma) add model m , r, d
 ```
 model m {
   id    Int     @id @default(autoincrement())
@@ -44,35 +49,33 @@ model r {
   createdAt DateTime  @default(now())
 }
 ```
-- [package.json](./package.json) เพิ่มบรรทัดนี้ใน 
+- [package.json](./package.json) add this line 
 ```
   "type":"module",
 ```
 
 
-## Code โปรแกรม
+## Code 
+
 - [./lib/db-lib.js] ฟังก์ชั่นเกี่ยวกับเขียนลงฐานของมูล(Prisma)
 - [./lib/memphis-lib.js] ฟังก์ชั่นเกี่ยวกับ memphis
 - [./lib/rabbitmq-lib.js] ฟังก์ชั่นเกี่ยวกับ rabbitmq
 
-## Test
-GET เข้าเวปสอง url นี้
-- http://localhost:3000/memphis
-- http://localhost:3000/rabbitmq
-
-POST
+## API end point
 ```
-curl -X POST -H "Content-Type: application/json" -d '{"key":"value"}' http://localhost:3000/memphis
-curl -X POST -H "Content-Type: application/json" -d '{"key":"value"}' http://localhost:3000/rabbitmq
+curl -X POST -H "Content-Type: application/json" -d '{"content":"value"}' http://localhost:3000/memphis
+curl -X POST -H "Content-Type: application/json" -d '{"content":"value"}' http://localhost:3000/rabbitmq
+curl -X POST -H "Content-Type: application/json" -d '{"content":"value"}' http://localhost:3000/db
 ```
 
-ทดสอบด้วย [k6](https://k6.io/) ติดตั้งให้เรียบร้อย รันสคริปต์ทดสอบ แก้ vus และ duration ให้เหมาะสม
+# K6 Test
+install [k6](https://k6.io/) modify vus and duration 
 - [test/stress-rabbitmq.js](./test/stress-rabbitmq.js)
 - [test/stress-memphis.js](./test/stress-memphis.js)
 
-จะได้ผลดังนี้ 
+sample output
 ```
-$ k6 run stress-memphis.js 
+$ k6 run test-memphis.js 
 
           /\      |‾‾| /‾‾/   /‾‾/   
      /\  /  \     |  |/  /   /  /    
@@ -113,7 +116,8 @@ running (35.0s), 0000/4000 VUs, 8500 complete and 34 interrupted iterations
 default ✓ [======================================] 4000 VUs  5s
 
 ```
-Memphis consumer batchSize:10 ทีละ 10 หน่วยความจำที่ใช้
+
+Memphis when Load test
 
 ```
 CONTAINER ID   NAME                    CPU %     MEM USAGE / LIMIT   MEM %     NET I/O           BLOCK I/O         PIDS
@@ -123,11 +127,3 @@ b20a00e76473   rabbitmq                0.35%     117.7MiB / 10GiB    1.15%     1
 456e17bc21b4   mq-memphis-metadata-1   0.09%     30.07MiB / 10GiB    0.29%     7.86MB / 11.3MB   770kB / 115MB     8
 ```
 
-
-```
-CONTAINER ID   NAME                    CPU %     MEM USAGE / LIMIT   MEM %     NET I/O           BLOCK I/O         PIDS
-14ccdd79e656   mq-memphis-1            0.89%     265.4MiB / 10GiB    2.59%     43MB / 69.4MB     51.7MB / 606MB    11
-4f7c65825fb8   mq-postgres-1           0.04%     50.59MiB / 10GiB    0.49%     15.1MB / 14.6MB   6.51MB / 2.37GB   11
-b20a00e76473   rabbitmq                0.28%     155.5MiB / 10GiB    1.52%     14MB / 14.7MB     4.85MB / 44.4MB   30
-456e17bc21b4   mq-memphis-metadata-1   0.00%     30.23MiB / 10GiB    0.30%     7.91MB / 11.4MB   770kB / 116MB     8
-```
