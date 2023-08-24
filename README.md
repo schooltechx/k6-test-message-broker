@@ -1,6 +1,8 @@
 # Load test Database, Memphis and RabbitMQ
 
 
+Load Test RabbitMQ and Memphis with K6 (Thai language) 
+
 [![Load Test RabbitMQ and Memphis with K6](https://img.youtube.com/vi/7KKoXFLqavE/0.jpg)](https://youtu.be/7KKoXFLqavE "Load Test RabbitMQ และ Memphis ด้วย K6")
 
 
@@ -27,8 +29,9 @@ node app.js
 node consumer.js
 
 ```
+
 ## Configuration 
-- [compose.yaml](./compose.yaml) postgress, RabbitMQ, Memphis 
+- [compose.yaml](./compose.yaml) Postgress, RabbitMQ, Memphis 
 - [.env](./.env) connection string for postgressql or sqlite (very slow)
 ```
 # DATABASE_URL="file:./dev.db"
@@ -57,9 +60,9 @@ model r {
 
 ## Code 
 
-- [./lib/db-lib.js] ฟังก์ชั่นเกี่ยวกับเขียนลงฐานของมูล(Prisma)
-- [./lib/memphis-lib.js] ฟังก์ชั่นเกี่ยวกับ memphis
-- [./lib/rabbitmq-lib.js] ฟังก์ชั่นเกี่ยวกับ rabbitmq
+- [./lib/db-lib.js] Database library (Prisma+postgress)
+- [./lib/memphis-lib.js] memphis library
+- [./lib/rabbitmq-lib.js] Rabbitmq library
 
 ## API end point
 ```
@@ -69,11 +72,11 @@ curl -X POST -H "Content-Type: application/json" -d '{"content":"value"}' http:/
 ```
 
 # K6 Test
-install [k6](https://k6.io/) modify vus and duration 
-- [test/stress-rabbitmq.js](./test/stress-rabbitmq.js)
-- [test/stress-memphis.js](./test/stress-memphis.js)
+install [k6](https://k6.io/) modify vus and duration in script file and run
+- [k6/test-rabbitmq.js](./k6/test-rabbitmq.js)
+- [k6/test-memphis.js](./k6/test-memphis.js)
+- [k6/test-db.js](./k6/test-db.js)
 
-sample output
 ```
 $ k6 run test-memphis.js 
 
@@ -127,3 +130,9 @@ b20a00e76473   rabbitmq                0.35%     117.7MiB / 10GiB    1.15%     1
 456e17bc21b4   mq-memphis-metadata-1   0.09%     30.07MiB / 10GiB    0.29%     7.86MB / 11.3MB   770kB / 115MB     8
 ```
 
+
+
+More
+
+- Basic using RabbitMQ (Thai language)
+[![Basic RabbitMQ](https://img.youtube.com/vi/2vcApGyfiVs/0.jpg)](https://youtu.be/2vcApGyfiVs "Basic RabbitMQ")
